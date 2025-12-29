@@ -136,9 +136,6 @@ function TaskPageContent() {
                     <TaskDialog open={createOpen} onOpenChange={setCreateOpen} onSuccess={handleTaskUpdate}>
                         <Button>New Task</Button>
                     </TaskDialog>
-                    <Button variant="outline" onClick={() => router.push("/advanced")}>
-                        Advanced (Voice)
-                    </Button>
                 </div>
             </div>
 

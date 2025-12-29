@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mic, MicOff, Activity, ListTodo, Plus, Trash2, CheckCircle2, Clock } from "lucide-react";
+import { Mic, MicOff, Activity, ListTodo, Plus, Trash2, CheckCircle2, Clock, ArrowLeft } from "lucide-react";
 import { RealtimeClient } from "@/lib/voice/realtime-client";
 import { AudioRecorder } from "@/lib/voice/audio-recorder";
 import { AudioPlayer } from "@/lib/voice/audio-player";
@@ -13,6 +14,7 @@ import { TaskWithTags } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdvancedPage() {
+    const router = useRouter();
     const { toast } = useToast();
     const [isConnected, setIsConnected] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
