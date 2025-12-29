@@ -45,7 +45,7 @@ JSON ARRAY OF INDICES:`;
             // For now, let's just do a simple filter if no LLM configured.
             const keywords = query.toLowerCase().split(" ");
             const simpleMatches = tasks.filter(t =>
-                keywords.some(k => t.title.toLowerCase().includes(k) || (t.description || "").toLowerCase().includes(k))
+                keywords.some((k: string) => t.title.toLowerCase().includes(k) || (t.description || "").toLowerCase().includes(k))
             );
             return NextResponse.json({ success: true, data: simpleMatches });
         }

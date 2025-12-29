@@ -31,6 +31,7 @@ function TaskPageContent() {
 
     useEffect(() => {
         fetchTasks();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter, searchQuery, sortBy, order]);
 
     async function fetchTasks() {

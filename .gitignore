@@ -43,3 +43,6 @@ next-env.d.ts
 
 # credentials and secrets
 Credentails.csv
+
+.vercel
+.env*.local

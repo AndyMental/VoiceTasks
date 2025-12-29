@@ -95,7 +95,7 @@ export function TaskItem({ task, onToggleStatus, onDelete, onUpdate }: TaskItemP
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the task "{task.title}".
+                            This will permanently delete the task &quot;{task.title}&quot;.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

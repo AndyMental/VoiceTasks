@@ -69,6 +69,7 @@ export default function AdvancedPage() {
         return () => {
             disconnect();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fetchTasks]);
 
     function addLog(msg: string) {

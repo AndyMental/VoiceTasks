@@ -70,8 +70,9 @@ export async function PATCH(
         return NextResponse.json({ success: true, data: task });
     } catch (error) {
         if (error instanceof z.ZodError) {
+            const zodError = error as z.ZodError;
             return NextResponse.json(
-                { success: false, error: error.errors },
+                { success: false, error: zodError.issues },
                 { status: 400 }
             );
         }
