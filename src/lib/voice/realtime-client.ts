@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-
 type EventHandler = (data: any) => void;
 
 interface Config {
@@ -12,13 +10,15 @@ export class RealtimeClient {
     private ws: WebSocket | null = null;
     private config: Config | null = null;
     private context: string = "";
+    private localTimeInfo: string = "";
     private listeners: Record<string, EventHandler[]> = {};
 
     constructor() { }
 
-    async connect(config: Config, context?: string) {
+    async connect(config: Config, context?: string, localTimeInfo?: string) {
         this.config = config;
         this.context = context || "";
+        this.localTimeInfo = localTimeInfo || "";
         // Convert https:// to wss:// for WebSocket connection
         const wsEndpoint = config.endpoint.replace(/^https:\/\//i, 'wss://');
         const url = `${wsEndpoint}/openai/realtime?api-version=2024-10-01-preview&deployment=${config.deployment}&api-key=${config.apiKey}`;
@@ -59,32 +59,37 @@ export class RealtimeClient {
     private sendSessionUpdate() {
         if (!this.ws) return;
 
-        // Initial session config
         const event = {
             type: "session.update",
             session: {
                 modalities: ["audio", "text"],
-                instructions: `You are a helpful task assistant. You can manage tasks (create, delete, list, deleteAllTasks). Keep responses concise.
+                instructions: `You are a voice-first task management assistant. Users speak naturally; you respond with short spoken replies.
 
-URGENT: I have provided the CURRENT state of the user's tasks in the CONTEXT section below. 
-Do NOT call 'listTasks' immediately if the information you need is already in the context. 
-If the user asks to delete EVERYTHING or ALL tasks, use the 'deleteAllTasks' tool for efficiency.
+START: Speak first. Greet the user based on LOCAL TIME (morning/afternoon/evening/night), then ask: "What would you like to do?"
 
-TAGGING: When creating tasks, try to categorize them using tags if appropriate (e.g., "grocery", "work", "urgent", "personal").
+Keep responses concise (one or two sentences max). Be courteous. Don't read task IDs unless the user asks.
+
+CONTEXT: The current task list is provided below. Don't call listTasks if the info is already present in the context.
+If the user asks to delete EVERYTHING or ALL tasks, use deleteAllTasks.
+
+TAGGING: When creating tasks, add tags when obvious (e.g., grocery, work, urgent, personal).
+
+LOCAL TIME:
+${this.localTimeInfo || "Not provided"}
 
 CURRENT CONTEXT:
 ${this.context}`,
-                voice: "alloy",
+                voice: "shimmer",
                 input_audio_format: "pcm16",
                 output_audio_format: "pcm16",
                 input_audio_transcription: {
-                    model: "whisper-1"
+                    model: "whisper-1",
                 },
                 turn_detection: {
                     type: "server_vad",
                     threshold: 0.5,
                     prefix_padding_ms: 300,
-                    silence_duration_ms: 300
+                    silence_duration_ms: 300,
                 },
                 tools: [
                     {
@@ -100,11 +105,11 @@ ${this.context}`,
                                 tags: {
                                     type: "array",
                                     items: { type: "string" },
-                                    description: "Optional tags for categorization (e.g., ['work', 'urgent'])"
-                                }
+                                    description: "Optional tags for categorization (e.g., ['work', 'urgent'])",
+                                },
                             },
-                            required: ["title"]
-                        }
+                            required: ["title"],
+                        },
                     },
                     {
                         type: "function",
@@ -113,63 +118,72 @@ ${this.context}`,
                         parameters: {
                             type: "object",
                             properties: {
-                                id: { type: "string" }
+                                id: { type: "string" },
                             },
-                            required: ["id"]
-                        }
+                            required: ["id"],
+                        },
                     },
                     {
                         type: "function",
                         name: "listTasks",
-                        description: "List all tasks. IMPORTANT: Always use this tool first to find the unique task IDs if you need to delete or update specific tasks. Tell the user the IDs if they ask.",
+                        description:
+                            "List all tasks. IMPORTANT: Always use this tool first to find the unique task IDs if you need to delete or update specific tasks. Tell the user the IDs if they ask.",
                         parameters: {
                             type: "object",
                             properties: {},
-                        }
+                        },
                     },
                     {
                         type: "function",
                         name: "undo",
-                        description: "Undo the last action (like creating or deleting a task). Use this when the user says 'undo that', 'wait stop', or 'revert'.",
+                        description:
+                            "Undo the last action (like creating or deleting a task). Use this when the user says 'undo that', 'wait stop', or 'revert'.",
                         parameters: {
                             type: "object",
                             properties: {},
-                        }
+                        },
                     },
                     {
                         type: "function",
                         name: "getTaskDigest",
-                        description: "Get a smart summary of the user's current workload, priorities, and any urgent items. Use this when the user asks 'how's my day looking?' or 'give me a summary'.",
+                        description:
+                            "Get a smart summary of the user's current workload, priorities, and any urgent items. Use this when the user asks 'how's my day looking?' or 'give me a summary'.",
                         parameters: {
                             type: "object",
                             properties: {},
-                        }
+                        },
                     },
                     {
                         type: "function",
                         name: "semanticSearch",
-                        description: "Find tasks using natural language or fuzzy queries. Useful when the user doesn't remember the exact title (e.g., 'find that task about groceries' or 'where is the thing about milk?').",
+                        description:
+                            "Find tasks using natural language or fuzzy queries. Useful when the user doesn't remember the exact title (e.g., 'find that task about groceries' or 'where is the thing about milk?').",
                         parameters: {
                             type: "object",
                             properties: {
-                                query: { type: "string" }
+                                query: { type: "string" },
                             },
-                            required: ["query"]
-                        }
+                            required: ["query"],
+                        },
                     },
                     {
                         type: "function",
                         name: "deleteAllTasks",
-                        description: "Delete ALL tasks from the database at once. Use this when the user wants to start from scratch or clear everything.",
+                        description:
+                            "Delete ALL tasks from the database at once. Use this when the user wants to start from scratch or clear everything.",
                         parameters: {
                             type: "object",
                             properties: {},
-                        }
-                    }
-                ]
-            }
+                        },
+                    },
+                ],
+            },
         };
+
         this.ws.send(JSON.stringify(event));
+
+        // Make the agent speak first (greeting) without waiting for user input
+        this.ws.send(JSON.stringify({ type: "response.create" }));
     }
 
     sendAudio(pcm16: Int16Array) {
