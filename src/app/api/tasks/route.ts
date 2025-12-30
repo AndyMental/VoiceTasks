@@ -58,41 +58,24 @@ export async function POST(req: NextRequest) {
         // Ensure tags is always an array
         const tags = validatedData.tags || [];
 
-        const taskData: any = {
-            title: validatedData.title,
-            description: validatedData.description || null,
-            status: validatedData.status || "PENDING",
-            priority: validatedData.priority || "MEDIUM",
-            dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
-            tags: {
-                connectOrCreate: tags.map((tag) => ({
-                    where: { name: tag },
-                    create: { name: tag },
-                })),
+        const task = await prisma.task.create({
+            data: {
+                title: validatedData.title,
+                description: validatedData.description || null,
+                status: validatedData.status || "PENDING",
+                priority: validatedData.priority || "MEDIUM",
+                dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
+                tags: {
+                    connectOrCreate: tags.map((tag) => ({
+                        where: { name: tag },
+                        create: { name: tag },
+                    })),
+                },
             },
-        };
+            include: { tags: true },
+        });
 
-        // Add userId if the column exists in the database (for backward compatibility)
-        // Use a default "system" user ID if required
-        try {
-            const task = await prisma.task.create({
-                data: taskData,
-                include: { tags: true },
-            });
-            return NextResponse.json({ success: true, data: task }, { status: 201 });
-        } catch (error: any) {
-            // If userId is required, try with a default value
-            if (error.message?.includes('userId') || error.code === 'P2003') {
-                console.log("Retrying with default userId");
-                taskData.userId = "system"; // Default user ID for voice tasks
-                const task = await prisma.task.create({
-                    data: taskData,
-                    include: { tags: true },
-                });
-                return NextResponse.json({ success: true, data: task }, { status: 201 });
-            }
-            throw error;
-        }
+        return NextResponse.json({ success: true, data: task }, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {
             const zodError = error as z.ZodError;
