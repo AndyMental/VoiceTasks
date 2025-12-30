@@ -2,24 +2,38 @@
 
 ## GitHub Auto-Deployment to Vercel
 
-This project is set up to automatically deploy to Vercel when you push to the `main` branch.
+This project can automatically deploy to Vercel when you push to the `main` branch.
 
-### Setup Instructions
+### Recommended: Vercel GitHub Integration (Easiest)
 
-1. **Connect Vercel to GitHub** (Recommended - Easier):
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click "Add New Project"
-   - Import your GitHub repository
-   - Vercel will automatically set up GitHub integration
-   - Every push to `main` will trigger a deployment
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click "Add New Project" or "Import Project"
+3. Select your GitHub repository (`AndyMental/VoiceTasks`)
+4. Vercel will automatically:
+   - Detect Next.js
+   - Set up GitHub integration
+   - Deploy on every push to `main`
+5. Add environment variables in Vercel:
+   - `DATABASE_URL` (your PostgreSQL connection string)
+   - `AZURE_OPENAI_ENDPOINT`
+   - `AZURE_OPENAI_API_KEY`
+   - `AZURE_OPENAI_DEPLOYMENT`
+   - `AZURE_GPT4_1_NANO_ENDPOINT`
+   - `AZURE_GPT4_1_NANO_API_KEY`
+   - `AZURE_GPT4_1_NANO_API_VERSION` (optional)
 
-2. **Or use GitHub Actions** (Manual setup):
-   - Go to your GitHub repository → Settings → Secrets and variables → Actions
-   - Add these secrets:
-     - `VERCEL_TOKEN`: Get from [Vercel Settings → Tokens](https://vercel.com/account/tokens)
-     - `VERCEL_ORG_ID`: Get from Vercel project settings
-     - `VERCEL_PROJECT_ID`: Get from Vercel project settings
-   - The workflow in `.github/workflows/deploy.yml` will handle deployments
+**That's it!** Every push to `main` will automatically deploy.
+
+### Alternative: GitHub Actions (Manual Setup)
+
+If you prefer GitHub Actions, you need to set up secrets:
+
+1. Go to GitHub repository → Settings → Secrets and variables → Actions
+2. Add these secrets:
+   - `VERCEL_TOKEN`: Get from [Vercel Settings → Tokens](https://vercel.com/account/tokens)
+   - `VERCEL_ORG_ID`: Get from Vercel project settings → General
+   - `VERCEL_PROJECT_ID`: Get from Vercel project settings → General
+3. The workflow in `.github/workflows/deploy.yml` will handle deployments
 
 ### Database Migration
 
