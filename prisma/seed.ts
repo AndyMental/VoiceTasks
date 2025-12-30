@@ -5,8 +5,26 @@ const prisma = new PrismaClient();
 async function main() {
     console.log("Seeding database...");
 
-    // Clear existing tasks? Maybe.
-    // await prisma.task.deleteMany();
+    // Note: Seed script requires a user to exist
+    // For seeding, create a test user or use an existing user ID
+    const testUserId = "seed-user-123";
+    const testUserEmail = "seed@example.com";
+
+    // Create test user if it doesn't exist
+    await prisma.user.upsert({
+        where: { id: testUserId },
+        update: {},
+        create: {
+            id: testUserId,
+            email: testUserEmail,
+            name: "Seed User",
+        },
+    });
+
+    // Clear existing tasks for this user
+    await prisma.task.deleteMany({
+        where: { userId: testUserId },
+    });
 
     const data = [
         { title: "Review Q1 Report", status: "PENDING", priority: "HIGH", tags: ["work"] },
@@ -24,6 +42,7 @@ async function main() {
     for (const t of data) {
         const task = await prisma.task.create({
             data: {
+                userId: testUserId,
                 title: t.title,
                 status: t.status,
                 priority: t.priority,
