@@ -24,16 +24,16 @@ This project can automatically deploy to Vercel when you push to the `main` bran
 
 **That's it!** Every push to `main` will automatically deploy.
 
-### Alternative: GitHub Actions (Manual Setup)
+### Note: GitHub Actions
 
-If you prefer GitHub Actions, you need to set up secrets:
+This project uses Vercel's built-in GitHub integration (recommended). If you need GitHub Actions for custom workflows, you'll need to:
 
 1. Go to GitHub repository → Settings → Secrets and variables → Actions
 2. Add these secrets:
    - `VERCEL_TOKEN`: Get from [Vercel Settings → Tokens](https://vercel.com/account/tokens)
    - `VERCEL_ORG_ID`: Get from Vercel project settings → General
    - `VERCEL_PROJECT_ID`: Get from Vercel project settings → General
-3. The workflow in `.github/workflows/deploy.yml` will handle deployments
+3. Create a workflow file in `.github/workflows/deploy.yml`
 
 ### Database Migration
 
