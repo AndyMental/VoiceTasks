@@ -184,11 +184,22 @@ export default function AdvancedPage() {
 
             if (data.name === "createTask") {
                 addLog(`Tool: Creating task "${args.title}"...`);
+                
+                // Ensure tags is always an array
+                const payload = {
+                    title: args.title,
+                    description: args.description || undefined,
+                    priority: args.priority || "MEDIUM",
+                    status: "PENDING",
+                    tags: Array.isArray(args.tags) ? args.tags : (args.tags ? [args.tags] : [])
+                };
+                
                 const res = await fetch("/api/tasks", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ...args, status: "PENDING" })
+                    body: JSON.stringify(payload)
                 });
+                
                 const json = await res.json();
                 if (json.success) {
                     toast({ title: "Voice Action", description: `Created task: ${args.title}` });
@@ -199,8 +210,10 @@ export default function AdvancedPage() {
                     setHistory(historyRef.current);
                     addLog(`Tool: Task created successfully.`);
                 } else {
-                    result = `Error: ${json.error}`;
-                    addLog(`Tool Error: ${json.error}`);
+                    const errorMsg = typeof json.error === 'string' ? json.error : JSON.stringify(json.error);
+                    result = `Error: ${errorMsg}`;
+                    addLog(`Tool Error: ${errorMsg}`);
+                    console.error("Task creation error:", json);
                 }
             } else if (data.name === "listTasks") {
                 addLog("Tool: Fetching task list...");

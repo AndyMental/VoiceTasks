@@ -50,17 +50,23 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
+        console.log("POST /api/tasks - Received body:", JSON.stringify(body));
+        
         const validatedData = createTaskSchema.parse(body);
+        console.log("POST /api/tasks - Validated data:", JSON.stringify(validatedData));
+
+        // Ensure tags is always an array
+        const tags = validatedData.tags || [];
 
         const task = await prisma.task.create({
             data: {
                 title: validatedData.title,
-                description: validatedData.description,
-                status: validatedData.status,
-                priority: validatedData.priority,
+                description: validatedData.description || null,
+                status: validatedData.status || "PENDING",
+                priority: validatedData.priority || "MEDIUM",
                 dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
                 tags: {
-                    connectOrCreate: validatedData.tags.map((tag) => ({
+                    connectOrCreate: tags.map((tag) => ({
                         where: { name: tag },
                         create: { name: tag },
                     })),
@@ -73,14 +79,16 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         if (error instanceof z.ZodError) {
             const zodError = error as z.ZodError;
+            console.error("POST /api/tasks - Validation error:", zodError.issues);
             return NextResponse.json(
-                { success: false, error: zodError.issues },
+                { success: false, error: zodError.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ') },
                 { status: 400 }
             );
         }
         console.error("POST /api/tasks error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to create task";
         return NextResponse.json(
-            { success: false, error: "Failed to create task" },
+            { success: false, error: errorMessage },
             { status: 500 }
         );
     }
