@@ -12,10 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { TaskWithTags } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { useUser, SignInButton } from "@clerk/nextjs";
 
 export default function AdvancedPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const { isSignedIn, isLoaded } = useUser();
     const [isConnected, setIsConnected] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [transcript, setTranscript] = useState<{ role: string, text: string }[]>([]);
@@ -33,6 +35,31 @@ export default function AdvancedPage() {
     const logEndRef = useRef<HTMLDivElement>(null);
     const tasksRef = useRef<TaskWithTags[]>([]);
     const historyRef = useRef<{ type: 'create' | 'delete', data: any }[]>([]);
+
+    // Don't render anything if not authenticated
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        );
+    }
+
+    if (!isSignedIn) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] gap-4 p-8">
+                <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-bold">Sign in required</h2>
+                    <p className="text-muted-foreground">
+                        Please sign in to access Voice Mode.
+                    </p>
+                </div>
+                <SignInButton mode="modal">
+                    <Button size="lg">Sign In</Button>
+                </SignInButton>
+            </div>
+        );
+    }
 
     // Keep refs in sync with state for use in event handler closures
     useEffect(() => { tasksRef.current = tasks; }, [tasks]);

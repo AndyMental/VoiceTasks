@@ -11,15 +11,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TaskDialog } from "@/components/task-dialog";
+import { useUser, SignInButton } from "@clerk/nextjs";
 
 function TaskPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const { toast } = useToast();
+    const { isSignedIn, isLoaded } = useUser();
 
     const [tasks, setTasks] = useState<TaskWithTags[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Don't render anything if not authenticated
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        );
+    }
+
+    if (!isSignedIn) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] gap-4 p-8">
+                <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-bold">Sign in required</h2>
+                    <p className="text-muted-foreground">
+                        Please sign in to access this application.
+                    </p>
+                </div>
+                <SignInButton mode="modal">
+                    <Button size="lg">Sign In</Button>
+                </SignInButton>
+            </div>
+        );
+    }
 
     // Filter states
     const statusFilter = searchParams.get("status") || "ALL";

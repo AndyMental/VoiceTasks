@@ -4,12 +4,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ListTodo, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 
 export function Navigation() {
     const pathname = usePathname();
     const router = useRouter();
+    const { isSignedIn } = useUser();
     const isAdvanced = pathname === "/advanced";
+
+    const handleNavigation = (path: string) => {
+        if (!isSignedIn) {
+            // Don't navigate if not signed in - let the page handle showing sign-in
+            return;
+        }
+        router.push(path);
+    };
 
     return (
         <nav className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
@@ -21,32 +30,60 @@ export function Navigation() {
                     </div>
                     
                     <div className="flex items-center gap-4">
-                        <Button
-                            variant={!isAdvanced ? "default" : "ghost"}
-                            size="sm"
-                            onClick={() => router.push("/")}
-                            className={cn(
-                                "flex items-center gap-2",
-                                !isAdvanced && "bg-primary text-primary-foreground"
-                            )}
-                        >
-                            <ListTodo className="h-4 w-4" />
-                            Tasks
-                        </Button>
-                        <Button
-                            variant={isAdvanced ? "default" : "ghost"}
-                            size="sm"
-                            onClick={() => router.push("/advanced")}
-                            className={cn(
-                                "flex items-center gap-2",
-                                isAdvanced && "bg-primary text-primary-foreground"
-                            )}
-                        >
-                            <Mic className="h-4 w-4" />
-                            Voice Mode
-                        </Button>
+                        <SignedIn>
+                            <Button
+                                variant={!isAdvanced ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => handleNavigation("/")}
+                                className={cn(
+                                    "flex items-center gap-2",
+                                    !isAdvanced && "bg-primary text-primary-foreground"
+                                )}
+                            >
+                                <ListTodo className="h-4 w-4" />
+                                Tasks
+                            </Button>
+                            <Button
+                                variant={isAdvanced ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => handleNavigation("/advanced")}
+                                className={cn(
+                                    "flex items-center gap-2",
+                                    isAdvanced && "bg-primary text-primary-foreground"
+                                )}
+                            >
+                                <Mic className="h-4 w-4" />
+                                Voice Mode
+                            </Button>
+                        </SignedIn>
                         
                         <SignedOut>
+                            <SignInButton mode="modal">
+                                <Button 
+                                    variant={!isAdvanced ? "default" : "ghost"} 
+                                    size="sm"
+                                    className={cn(
+                                        "flex items-center gap-2",
+                                        !isAdvanced && "bg-primary text-primary-foreground"
+                                    )}
+                                >
+                                    <ListTodo className="h-4 w-4" />
+                                    Tasks
+                                </Button>
+                            </SignInButton>
+                            <SignInButton mode="modal">
+                                <Button 
+                                    variant={isAdvanced ? "default" : "ghost"} 
+                                    size="sm"
+                                    className={cn(
+                                        "flex items-center gap-2",
+                                        isAdvanced && "bg-primary text-primary-foreground"
+                                    )}
+                                >
+                                    <Mic className="h-4 w-4" />
+                                    Voice Mode
+                                </Button>
+                            </SignInButton>
                             <SignInButton mode="modal">
                                 <Button variant="ghost" size="sm">Sign In</Button>
                             </SignInButton>

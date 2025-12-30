@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET() {
+    const { userId } = await auth();
+    
+    if (!userId) {
+        return NextResponse.json(
+            { error: "Unauthorized" },
+            { status: 401 }
+        );
+    }
+
     const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
     const apiKey = process.env.AZURE_OPENAI_API_KEY;
     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4o-realtime-preview"; // Default or specific mapping
