@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
     try {
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const { query } = await req.json();
 
         if (!query) {
             return NextResponse.json({ success: false, error: "Query is required" }, { status: 400 });
         }
 
-        // Fetch all tasks
+        // Fetch only tasks for the current user
         const tasks = await prisma.task.findMany({
+            where: { userId },
             include: { tags: true }
         });
 

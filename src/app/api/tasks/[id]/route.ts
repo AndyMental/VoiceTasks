@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { updateTaskSchema } from "@/lib/validations/tasks";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const task = await prisma.task.findUnique({
             where: { id: params.id },
             include: { tags: true },
@@ -17,6 +27,14 @@ export async function GET(
             return NextResponse.json(
                 { success: false, error: "Task not found" },
                 { status: 404 }
+            );
+        }
+
+        // Ensure user can only access their own tasks
+        if (task.userId !== userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 403 }
             );
         }
 
@@ -34,6 +52,34 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        // Verify task belongs to user
+        const existingTask = await prisma.task.findUnique({
+            where: { id: params.id },
+        });
+
+        if (!existingTask) {
+            return NextResponse.json(
+                { success: false, error: "Task not found" },
+                { status: 404 }
+            );
+        }
+
+        if (existingTask.userId !== userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 403 }
+            );
+        }
+
         const body = await req.json();
         const validatedData = updateTaskSchema.parse(body);
 
@@ -96,6 +142,34 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        // Verify task belongs to user
+        const existingTask = await prisma.task.findUnique({
+            where: { id: params.id },
+        });
+
+        if (!existingTask) {
+            return NextResponse.json(
+                { success: false, error: "Task not found" },
+                { status: 404 }
+            );
+        }
+
+        if (existingTask.userId !== userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 403 }
+            );
+        }
+
         await prisma.task.delete({
             where: { id: params.id },
         });

@@ -4,16 +4,28 @@ import { createTaskSchema } from "@/lib/validations/tasks";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { TaskStatus } from "@/lib/types";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
     try {
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const { searchParams } = new URL(req.url);
         const status = searchParams.get("status");
         const search = searchParams.get("search");
         const sortBy = searchParams.get("sortBy") || "createdAt";
         const order = searchParams.get("order") || "desc";
 
-        const where: Prisma.TaskWhereInput = {};
+        const where: Prisma.TaskWhereInput = {
+            userId, // Only get tasks for the current user
+        };
 
         if (status && status !== "ALL") {
             // Ideally validate against Enum, but for now simple check or cast
@@ -49,6 +61,34 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        // Get or create user in database
+        const user = await currentUser();
+        if (user) {
+            await prisma.user.upsert({
+                where: { id: userId },
+                update: {
+                    email: user.emailAddresses[0]?.emailAddress || "",
+                    name: user.fullName || user.firstName || null,
+                    image: user.imageUrl || null,
+                },
+                create: {
+                    id: userId,
+                    email: user.emailAddresses[0]?.emailAddress || "",
+                    name: user.fullName || user.firstName || null,
+                    image: user.imageUrl || null,
+                },
+            });
+        }
+
         const body = await req.json();
         console.log("POST /api/tasks - Received body:", JSON.stringify(body));
         
@@ -60,6 +100,7 @@ export async function POST(req: NextRequest) {
 
         const task = await prisma.task.create({
             data: {
+                userId,
                 title: validatedData.title,
                 description: validatedData.description || null,
                 status: validatedData.status || "PENDING",
@@ -96,7 +137,18 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE() {
     try {
-        await prisma.task.deleteMany({});
+        const { userId } = await auth();
+        
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        await prisma.task.deleteMany({
+            where: { userId },
+        });
         return NextResponse.json({ success: true, message: "All tasks deleted" });
     } catch (error) {
         console.error("DELETE /api/tasks error:", error);

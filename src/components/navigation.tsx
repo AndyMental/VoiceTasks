@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ListTodo, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function Navigation() {
     const pathname = usePathname();
@@ -19,7 +20,7 @@ export function Navigation() {
                         <span className="text-xl font-bold">Tasks Voice</span>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                         <Button
                             variant={!isAdvanced ? "default" : "ghost"}
                             size="sm"
@@ -44,6 +45,18 @@ export function Navigation() {
                             <Mic className="h-4 w-4" />
                             Voice Mode
                         </Button>
+                        
+                        <SignedOut>
+                            <SignInButton mode="modal">
+                                <Button variant="ghost" size="sm">Sign In</Button>
+                            </SignInButton>
+                            <SignUpButton mode="modal">
+                                <Button size="sm">Sign Up</Button>
+                            </SignUpButton>
+                        </SignedOut>
+                        <SignedIn>
+                            <UserButton afterSignOutUrl="/" />
+                        </SignedIn>
                     </div>
                 </div>
             </div>
