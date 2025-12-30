@@ -36,6 +36,68 @@ export default function AdvancedPage() {
     const tasksRef = useRef<TaskWithTags[]>([]);
     const historyRef = useRef<{ type: 'create' | 'delete', data: any }[]>([]);
 
+    const fetchTasks = useCallback(async () => {
+        if (!isSignedIn) return;
+        setIsLoadingTasks(true);
+        try {
+            const res = await fetch("/api/tasks?sortBy=createdAt&order=desc");
+            const data = await res.json();
+            if (data.success) {
+                setTasks(data.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch tasks:", error);
+        } finally {
+            setIsLoadingTasks(false);
+        }
+    }, [isSignedIn]);
+
+    // Keep refs in sync with state for use in event handler closures
+    useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+    useEffect(() => { historyRef.current = history; }, [history]);
+
+    // Scroll to bottom effects
+    useEffect(() => {
+        if (!isSignedIn) return;
+        transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [transcript, assistantResponse, isSignedIn]);
+
+    useEffect(() => {
+        if (!isSignedIn) return;
+        logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [logs, isSignedIn]);
+
+    // Helper functions (defined before early return to avoid issues)
+    function addLog(msg: string) {
+        setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 50));
+    }
+
+    function addTranscript(role: string, text: string) {
+        setTranscript(prev => [...prev, { role, text }]);
+    }
+
+    async function disconnect() {
+        recorderRef.current?.stop();
+        setIsRecording(false);
+        clientRef.current?.disconnect();
+        setIsConnected(false);
+        playerRef.current?.reset();
+        addLog("System: Disconnected.");
+    }
+
+    // Initialize client and fetch tasks on mount (only if signed in)
+    useEffect(() => {
+        if (!isSignedIn || !isLoaded) return;
+        clientRef.current = new RealtimeClient();
+        playerRef.current = new AudioPlayer();
+        fetchTasks();
+
+        return () => {
+            disconnect();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fetchTasks, isSignedIn, isLoaded]);
+
     // Don't render anything if not authenticated
     if (!isLoaded) {
         return (
@@ -59,54 +121,6 @@ export default function AdvancedPage() {
                 </SignInButton>
             </div>
         );
-    }
-
-    // Keep refs in sync with state for use in event handler closures
-    useEffect(() => { tasksRef.current = tasks; }, [tasks]);
-    useEffect(() => { historyRef.current = history; }, [history]);
-
-    const fetchTasks = useCallback(async () => {
-        setIsLoadingTasks(true);
-        try {
-            const res = await fetch("/api/tasks?sortBy=createdAt&order=desc");
-            const data = await res.json();
-            if (data.success) {
-                setTasks(data.data);
-            }
-        } catch (error) {
-            console.error("Failed to fetch tasks:", error);
-        } finally {
-            setIsLoadingTasks(false);
-        }
-    }, []);
-
-    // Scroll to bottom effects
-    useEffect(() => {
-        transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [transcript, assistantResponse]);
-
-    useEffect(() => {
-        logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [logs]);
-
-    // Initialize client and fetch tasks on mount
-    useEffect(() => {
-        clientRef.current = new RealtimeClient();
-        playerRef.current = new AudioPlayer();
-        fetchTasks();
-
-        return () => {
-            disconnect();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fetchTasks]);
-
-    function addLog(msg: string) {
-        setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 50));
-    }
-
-    function addTranscript(role: string, text: string) {
-        setTranscript(prev => [...prev, { role, text }]);
     }
 
     async function connect() {
@@ -169,15 +183,6 @@ export default function AdvancedPage() {
             addLog(`Error: ${(e as Error).message}`);
             toast({ title: "Connection Failed", description: (e as Error).message, variant: "destructive" });
         }
-    }
-
-    async function disconnect() {
-        recorderRef.current?.stop();
-        setIsRecording(false);
-        clientRef.current?.disconnect();
-        setIsConnected(false);
-        playerRef.current?.reset();
-        addLog("System: Disconnected.");
     }
 
     async function toggleRecording() {

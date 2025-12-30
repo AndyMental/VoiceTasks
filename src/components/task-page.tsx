@@ -22,6 +22,36 @@ function TaskPageContent() {
 
     const [tasks, setTasks] = useState<TaskWithTags[]>([]);
     const [loading, setLoading] = useState(true);
+    const [createOpen, setCreateOpen] = useState(false);
+
+    // Filter states
+    const statusFilter = searchParams.get("status") || "ALL";
+    const searchQuery = searchParams.get("search") || "";
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const order = searchParams.get("order") || "desc";
+
+    const [localSearch, setLocalSearch] = useState(searchQuery);
+
+    useEffect(() => {
+        if (!isSignedIn || !isLoaded) return;
+        fetchTasks();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statusFilter, searchQuery, sortBy, order, isSignedIn, isLoaded]);
+
+    useEffect(() => {
+        if (!isSignedIn) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if typing in an input or textarea
+            if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) return;
+
+            if (e.key.toLowerCase() === "n") {
+                e.preventDefault();
+                setCreateOpen(true);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isSignedIn]);
 
     // Don't render anything if not authenticated
     if (!isLoaded) {
@@ -47,19 +77,6 @@ function TaskPageContent() {
             </div>
         );
     }
-
-    // Filter states
-    const statusFilter = searchParams.get("status") || "ALL";
-    const searchQuery = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const order = searchParams.get("order") || "desc";
-
-    const [localSearch, setLocalSearch] = useState(searchQuery);
-
-    useEffect(() => {
-        fetchTasks();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusFilter, searchQuery, sortBy, order]);
 
     async function fetchTasks() {
         setLoading(true);
@@ -135,22 +152,6 @@ function TaskPageContent() {
     function handleTaskUpdate() {
         fetchTasks(); // Refresh list on edit
     }
-
-    const [createOpen, setCreateOpen] = useState(false);
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if typing in an input or textarea
-            if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) return;
-
-            if (e.key.toLowerCase() === "n") {
-                e.preventDefault();
-                setCreateOpen(true);
-            }
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
 
     return (
         <div className="container max-w-4xl mx-auto py-8 space-y-8">
