@@ -5,9 +5,9 @@ CREATE TABLE "Task" (
     "description" TEXT,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "priority" TEXT NOT NULL DEFAULT 'MEDIUM',
-    "dueDate" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "dueDate" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateTable

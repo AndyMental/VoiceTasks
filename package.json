@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "clean": "rm -rf .next node_modules/.cache",
+    "rebuild": "npm run clean && npm install && npx prisma generate && npm run build",
+    "fix-db": "node scripts/fix-userid.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
