@@ -14,7 +14,7 @@ This project can automatically deploy to Vercel when you push to the `main` bran
    - Set up GitHub integration
    - Deploy on every push to `main`
 5. Add environment variables in Vercel:
-   - `DATABASE_URL` (your PostgreSQL connection string)
+   - `DATABASE_URL` - Use Prisma Accelerate URL: `prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19nUDdEQkZ0UDdneWJmQlQ2Z3VfZjAiLCJhcGlfa2V5IjoiMDFLRE1SN0tFSjlaNEhYMDdUUlJIMk5CUEMiLCJ0ZW5hbnRfaWQiOiJkZGYxMDA0ZTNlODA0MjJiMDhiZjZiYjYyZmZhOWNjMDQxMGM0OTk2MjY2MzY1OWNjZDI5N2VmZjljYTgwMmQzIiwiaW50ZXJuYWxfc2VjcmV0IjoiMDk1ZjQzMjEtODQ1OS00MDRmLWJkZDctMDQ3OTYyOGZlNmQ4In0.CMHE1MVuqPyQa73t82nBPftQncucuij8FiCWBZcRcLI`
    - `AZURE_OPENAI_ENDPOINT`
    - `AZURE_OPENAI_API_KEY`
    - `AZURE_OPENAI_DEPLOYMENT`

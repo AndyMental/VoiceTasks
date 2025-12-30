@@ -181,15 +181,18 @@ sequenceDiagram
    cp .env.example .env
    ```
    
-   Edit `.env` and add your Azure OpenAI credentials:
+   Edit `.env` and add your credentials:
    ```env
+   # Azure OpenAI Configuration
    AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com
    AZURE_OPENAI_API_KEY=your-api-key
    AZURE_OPENAI_DEPLOYMENT=gpt-realtime-mini
    AZURE_GPT4_1_NANO_ENDPOINT=https://your-endpoint.openai.azure.com/openai/deployments/gpt-4.1-nano
    AZURE_GPT4_1_NANO_API_KEY=your-api-key
    AZURE_GPT4_1_NANO_API_VERSION=2025-01-01-preview
-   DATABASE_URL=file:./data/tasks.db
+   
+   # Database Configuration (Prisma Accelerate - recommended)
+   DATABASE_URL="prisma+postgres://accelerate.prisma-data.net/?api_key=your-api-key"
    ```
 
 4. **Set up the database**
